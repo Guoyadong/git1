@@ -12,103 +12,135 @@ import java.sql.Statement;
 import javax.xml.namespace.QName;
 import ws.DBupdate;
 import ws.DBupdateService;
-import ws.Test;
 
 
+/**
+ * 
+ * @author 郭亚东
+ * @version 该版本固定wsdl路径，服务器地址、用户数据库相关信息可变。日期：13年7月11日14点20分
+ * @see connect类实现对用户数据库访问，访问其提前设置好的一个表，来同步至服务器端，由服务器端接手数据。
+ *
+ */
 class connect extends Thread{
+	
 //	数据库名称
 	String _DBname;
+	
 //	数据表名称
 	String _TBname;
+	
 //	ip地址
 	String _IP;
+	
 //	数据库用户名
 	String _username;
+	
 //	数据库密码
 	String _userpwd;
+	
 //	数据库登陆地址
 	String _dbURL;
+	
+//	服务器IP
+	String _SIp;
+	
+//	服务器端口号
+	String _SPort;
+	
 //	数据库连接
 	Connection con=null;
+	
 //	数据库连接状态
 	Statement sta=null;
+	
 //	数据库删除操作
 	Statement stdel=null;
+	
 //	数据库查询结果
 	ResultSet res=null;
+	
 //	执行许可
 	public  boolean runAble=true;
+	
 //	关闭许可
 	public  boolean closeAble=false;
+	
 //	服务端口
 //	DBsynService dbs;
 //	DBsynDelegate dbd;
+//	服务端口对象
 	DBupdate dbd;
 	DBupdateService dbs;
 	
+//	间隔时间
 	public int sleeptime;
+	
 //	对象申请，此为默认初始化
 public connect(){
-	 _DBname="UFDATA_401_2013";
-	 _TBname="RdRecords_Temp";
-	 _IP="192.168.10.105:1433";
-	 _username="sa";
-	 _userpwd="sa";
-	 _dbURL="jdbc:sqlserver://"+_IP+";DatabaseName="+_DBname;
-	 sleeptime=60000;
-	 dbs=new DBupdateService();
-	 dbd=dbs.getDBupdate();
+//	 _DBname="UFDATA_401_2013";
+//	 _TBname="RdRecords_Temp";
+//	 _IP="192.168.10.105:1433";
+//	 _username="sa";
+//	 _userpwd="sa";
+//	 _dbURL="jdbc:sqlserver://"+_IP+";DatabaseName="+_DBname;
+//	 sleeptime=60000;
+//	 dbs=new DBupdateService();
+//	 dbd=dbs.getDBupdate();
 }
+
 //	带参数的对象申请
-public connect(String DatabaseName,String TableName,String IP,String UserName,String UserPassword){
+public connect(String DatabaseName,String TableName,String IP,String UserName,String UserPassword,String ServerIP,String ServerPort){
 	_DBname=DatabaseName;
 	_TBname=TableName;
 	_IP=IP;
 	_username=UserName;
 	_userpwd=UserPassword;
+	_SIp=ServerIP;
+	_SPort=ServerPort;
 	_dbURL="jdbc:sqlserver://"+_IP+";DatabaseName="+_DBname;
-	dbs=new DBupdateService();
-	 dbd=dbs.getDBupdate();
-	 sleeptime=10000;
-}
-//	对象的初始化，和带参数时的申请是一个效果
-public void init(String DatabaseName,String TableName,String IP,String UserName,String UserPassword){
-	_DBname=DatabaseName;
-	_TBname=TableName;
-	_IP=IP;
-	_username=UserName;
-	_userpwd=UserPassword;
-	_dbURL="jdbc:sqlserver://"+_IP+";DatabaseName="+_DBname;
-	dbs=new DBupdateService();
-	dbd=dbs.getDBupdate();
-	sleeptime=60000;
-}
-//	服务器地址初始化
-public void initService(String url){
-	URL baseUrl,uurl = null;
+	URL baseUrl,url = null;
 	baseUrl = ws.DBupdateService.class.getResource(".");
 	try {
-		uurl = new URL(baseUrl,url+"/GuobangWebservice/services/DBupdate?wsdl");
+		url = new URL(baseUrl,"http://"+_SIp+":"+_SPort+"/GuobangWebservice/services/DBupdate?wsdl");
 	} catch (MalformedURLException e1) {
-		// TODO Auto-generated catch block
 		e1.printStackTrace();
 	}
-	QName qn=new QName("http://ws/","DBsynService");
-	
-		dbs=new DBupdateService(uurl, new QName("http://ws","DBupdateService"));
-		dbd=dbs.getDBupdate();
-	
+//	QName qn=new QName("http://ws/","DBsynService");
+	dbs=new DBupdateService(url, new QName("http://ws","DBupdateService"));
+	dbd=dbs.getDBupdate();
+	sleeptime=10000;
+}
+
+//	对象的初始化，和带参数时的申请是一个效果
+public void init(String DatabaseName,String TableName,String IP,String UserName,String UserPassword,String ServerIP,String ServerPort){
+	_DBname=DatabaseName;
+	_TBname=TableName;
+	_IP=IP;
+	_username=UserName;
+	_userpwd=UserPassword;
+	_SIp=ServerIP;
+	_SPort=ServerPort;
+	_dbURL="jdbc:sqlserver://"+_IP+";DatabaseName="+_DBname;
+	URL baseUrl,url = null;
+	baseUrl = ws.DBupdateService.class.getResource(".");
+	try {
+		url = new URL(baseUrl,"http://"+_SIp+":"+_SPort+"/GuobangWebservice/services/DBupdate?wsdl");
+	} catch (MalformedURLException e1) {
+		e1.printStackTrace();
+	}
+//	QName qn=new QName("http://ws/","DBsynService");
+	dbs=new DBupdateService(url, new QName("http://ws","DBupdateService"));
+	dbd=dbs.getDBupdate();
+	sleeptime=60000;
 }
 
 //	线程运行程序
 public void run(){
 //			正式程序段
-	 
-	
 	String driverName="com.microsoft.jdbc.sqlserver.SQLServerDriver";
 	String query="select * from "+_TBname;
-
 	try{
+//		外层循环，每隔sleeptime毫秒运行一次
 		while(runAble){
 			sleep(sleeptime);
 			//wait(sleeptime);
@@ -121,6 +153,7 @@ public void run(){
 			stdel=con.createStatement();
 			res=sta.executeQuery(query);
 			System.out.println("start while");
+//			发现有数据要同步后，进入同步循环
 			while(res.next() && runAble)
 			{
 				System.out.println("while start");
@@ -130,11 +163,9 @@ public void run(){
 //				System.out.println("teststart");
 //				System.out.println(dbd.test(12, 123, 123, 123));
 //				System.out.println("test over");
-				System.out.println("start switch");
-				
+				System.out.println("start switch");				
 				while(did==0 && runAble)
-				{
-					
+				{					
 					//---------
 					switch(sign)
 					{
@@ -160,8 +191,7 @@ public void run(){
 						break;
 					default:
 						System.err.println("当前数据条数据操作异常!!");
-						//报错
-						
+						//报错						
 					}
 				}
 				if(!runAble)
@@ -178,16 +208,14 @@ public void run(){
 				closeAble=true;
 				System.out.println("1 time ok");
 			}
-//			sta.close();
-//			con.close();
+			sta.close();
+			con.close();
 		}
 	}
 	catch (InterruptedException e) {
-		// TODO: handle exception
 		System.out.println("interrupt error");
 	}
 	catch (SQLException e) {
-		// TODO: handle exception
 		System.out.println("sql error");
 		e.printStackTrace();
 	}
@@ -199,11 +227,9 @@ public void run(){
 			con.close();
 		//	res.close();
 		}
-		catch(Exception o){
-			
+		catch(Exception o){			
 		}
-	}
-	
+	}	
 	System.out.println("Run run over!");
 }
 }

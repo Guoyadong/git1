@@ -1,34 +1,26 @@
 /*
  * 此类为客户端的主类，控制界面和同步操作
  */
-//import ws.DBupdate;
-//import ws.DBupdateService;
+
 import java.io.*;
-import java.sql.*;
-import java.net.*;
-//import java.sql.DriverManager;
-
 import javax.swing.*; 
-
-import com.sun.corba.se.pept.transport.Connection;
-
 import java.awt.*; 
 import java.awt.event.*; 
-
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import javax.xml.namespace.QName;
-import ws.DBupdate;
-import ws.DBupdateService;
-import ws.Test;
-
+/**
+ * 
+ * @author 郭亚东
+ * @version 此版本实现多个属性动态配置化，具体参看config.ini文件。
+ * @see 此类为主类，实现窗体的生成和托盘图标的生成，并创建同步子线程，来实现功能。
+ *
+ */
 public class callt {
+	
+//	子线程类对象
 	connect con;
-	//public static boolean runAble=false;
+
 //	测试用内部函数
 	/*
 	class aaa extends Thread{
@@ -73,20 +65,41 @@ public class callt {
 			}
 		}
 	}*/
+	
+//	检测网络链接是否成功的值
 	public boolean netIsOk=false;
+	
+//	数据库名称
 	String _DBname;
+	
+//	数据库用户名
 	String _name;
+	
+//	数据库密码
 	String _pwd;
+	
+//	数据库表名
 	String _table;
+	
+//	数据库地址
 	String _ip;
+	
+//	数据库端口
 	String _port;
+	
+//	服务器地址
 	String _Sip;
+	
+//	服务器端口
 	String _Sport;
+	
 //	托盘图标名称
 	public String tuopan;
+	
 //	托盘按钮
 	TrayIcon trayIcon;
 
+//	托盘菜单及其选项
     PopupMenu popup; 
     MenuItem menuExit; 
     MenuItem menustart;
@@ -111,6 +124,7 @@ public class callt {
 //		_port="1433";
 //		_Sip="192.168.1.128";
 //		_Sport="80";
+		con=new connect();
 		String s=System.getProperty("user.dir");
 		
 		try {
@@ -156,14 +170,27 @@ public class callt {
 
 			e.printStackTrace();
 		}
+		
 		checkNet();
-		con=new connect(_DBname, _table, _ip+":"+_port, _name, _pwd);
-		con.setName("同步服务");
+		if(netIsOk){
+			startService();
+			tuopan="/start.jpg";
+		}
+		else {
+			tuopan="/stop.jpg";
+		}
 		System.out.println("Sip:"+_Sip+";Sport:"+_Sport);
-		con.initService("http://"+_Sip+":"+_Sport);
+		//con.initService("http://"+_Sip+":"+_Sport);
 	}
 	
-//	开始按钮监听器
+//	开始服务控制
+	void startService(){
+		con=new connect(_DBname, _table, _ip+":"+_port, _name, _pwd,_Sip,_Sport);
+		con.setName("同步服务");
+	}
+	
+	
+//	界面开始按钮监听器
 	ActionListener start=new ActionListener() {		
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -173,29 +200,33 @@ public class callt {
 			_Sip=JTFip.getText();
 			_Sport=JTFport.getText();
 			//System.out.println(_name+";"+_pwd+"-");
-			con= new connect(_DBname, _table, _ip+":"+_port, _name, _pwd);
 			checkNet();
-			con.initService("http://"+_Sip+":"+_Sport);
-			con.runAble=true;
-			con.start();
+			if(netIsOk){
+				tuopan="/start.jpg";
+				trayIcon.setImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource(tuopan)));
+				startService();
+				con.runAble=true;
+				con.start();			
 //			con.sleeptime=60000;			
-			JBstart.setEnabled(false);	
-			JBstop.setEnabled(true);
-			menustart.setEnabled(false);
-            menustop.setEnabled(true);
+				JBstart.setEnabled(false);	
+				JBstop.setEnabled(true);
+				menustart.setEnabled(false);
+	            menustop.setEnabled(true);
+			}
             //System.out.println("Run start!");
 		}
 	};
 	
-//	停止按钮监听器
+//	界面停止按钮监听器
 	ActionListener stop=new ActionListener() {		
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			// TODO Auto-generated method stub
+			tuopan="/stop.jpg";
+			trayIcon.setImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource(tuopan)));
 			con.runAble=false;
 //			con.sleeptime=0;
-			con.interrupt();
-			
+			con.interrupt();			
 			JBstop.setEnabled(false);
 			JBstart.setEnabled(true);
 			menustart.setEnabled(true);
@@ -203,7 +234,7 @@ public class callt {
 		}
 	};
 	
-//	最小化按钮监听器
+//	界面最小化按钮监听器
 	ActionListener min=new ActionListener() {	
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -236,7 +267,12 @@ public class callt {
 		JBstart.addActionListener(start);
 		JBstop.addActionListener(stop);
 		jBmin.addActionListener(min);
-		JBstart.setEnabled(false);
+		if(netIsOk){
+			JBstart.setEnabled(false);
+		}
+		else {
+			JBstop.setEnabled(false);
+		}
 //		JBstart.addActionListener(startL);
 //		JBstop.addActionListener(stopL);
 //		jBmin.addActionListener(minL);
@@ -287,8 +323,6 @@ public class callt {
             //创建一个Action监听器:左键双击事件 
             final  ActionListener al = new ActionListener() { 
                 public void actionPerformed(ActionEvent e) { 
-                    //trayIcon.displayMessage("托盘事件", "这个双击事件己收到", TrayIcon.MessageType.WARNING); 
-                    //mainFrame.main.setVisible(true); 
                 	JF.setVisible(true);
                 } 
             }; 
@@ -323,18 +357,21 @@ public class callt {
         ActionListener startListener = new ActionListener() { 
             public void actionPerformed(ActionEvent e) { 
                 tuopan="/start.jpg";
-                trayIcon.setImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource(tuopan)));
+                
                 //con.notify();
                 
 //                con.sleeptime=60000;
-                
-                con= new connect(_DBname, _table, _ip+":"+_port, _name, _pwd);
+                checkNet();
+                if(netIsOk){
+                trayIcon.setImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource(tuopan)));
+                startService();
     			con.runAble=true;
-    			con.start();
+    			con.start();                
                 menustart.setEnabled(false);
                 menustop.setEnabled(true);
                 JBstart.setEnabled(false);	
     			JBstop.setEnabled(true);
+            	}
             } 
         }; 
         //停止服务监听器
@@ -365,7 +402,7 @@ public class callt {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
-				JOptionPane.showMessageDialog(JF, "景联文科技有限公司");
+				JOptionPane.showMessageDialog(JF, "景联文科技有限公司\r\n版本：v1.0");
 			}
 		};
         menuExit.addActionListener(exitListener); 
@@ -376,6 +413,12 @@ public class callt {
         popup.add(menustop);
         popup.add(menuhelp);
         popup.add(menuExit);
+        if(netIsOk){
+        	menustart.setEnabled(false);
+        }
+        else {
+			menustop.setEnabled(false);
+		}
         return popup; 
     } 
 	
@@ -394,11 +437,13 @@ public class callt {
             try {  
                 InputStream in = url.openStream();  
                 in.close();  
+                netIsOk=true;
                // System.out.println("网络连接正常！");  
             } catch (IOException e) {  
                 //System.out.println("网络连接失败！");  
-                JOptionPane.showMessageDialog(null, "优时端服务器未开启！请等待服务器开启后开启本程序！");
-                System.exit(0);
+                JOptionPane.showMessageDialog(null, "优时端服务器未开启或网络未配置好！请等待服务器开启或配置好网络后开启本程序！");
+                netIsOk=false;
+//                System.exit(0);
             }  
         } catch (MalformedURLException e) {  
             e.printStackTrace();  
@@ -410,25 +455,13 @@ public class callt {
 //		下面两条是连接超时设置和数据获取超时设置
 		System.setProperty("sun.net.client.defaultConnectTimeout", "5000");
 //		System.setProperty("sun.net.client.defaultReadTimeout", "2000");
-//		connect cc;
-//		cc=new connect();
-		
-//		String icfn="/start.jpg";
-//		tubiao tt=new tubiao();
-//		PopupMenu pop=tt.createPopup();
-//		if(!tt.CreteTrayIcon(icfn,"我的托盘",pop)){ 
-//            System.out.println("不能创建托盘"); 
-//        }
-		
-		//checkNet();
-		callt a=new callt();
-		
-		a.tuopan="/start.jpg";
-		PopupMenu pop=a.createPopup();
-		a.CreteTrayIcon("bilibili", pop);
-		a.build();
-		a.con.start();
-		
 
+
+		callt a=new callt();
+		PopupMenu pop=a.createPopup();
+		a.CreteTrayIcon("国邦WebService Clinet", pop);
+		a.build();
+		if(a.netIsOk)
+			a.con.start();
 	}
 }
