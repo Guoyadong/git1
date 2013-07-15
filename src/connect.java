@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import javax.xml.namespace.QName;
+import javax.swing.*;
 import ws.DBupdate;
 import ws.DBupdateService;
 
@@ -216,6 +217,7 @@ public void run(){
 		System.out.println("interrupt error");
 	}
 	catch (SQLException e) {
+		JOptionPane.showMessageDialog(null, "用友数据库连接错误，请检查配置信息和数据库服务状态，然后重新启动本服务！");
 		System.out.println("sql error");
 		e.printStackTrace();
 	}

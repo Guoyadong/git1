@@ -212,6 +212,10 @@ public class callt {
 				JBstop.setEnabled(true);
 				menustart.setEnabled(false);
 	            menustop.setEnabled(true);
+	            JTFport.setEditable(false);
+	    		JTFip.setEditable(false);
+	    		JTFname.setEditable(false);
+	    		jPFpwd.setEditable(false);
 			}
             //System.out.println("Run start!");
 		}
@@ -231,6 +235,10 @@ public class callt {
 			JBstart.setEnabled(true);
 			menustart.setEnabled(true);
             menustop.setEnabled(false);
+            JTFport.setEditable(true);
+    		JTFip.setEditable(true);
+    		JTFname.setEditable(true);
+    		jPFpwd.setEditable(true);
 		}
 	};
 	
@@ -256,6 +264,10 @@ public class callt {
 		JTFip=new JTextField(_Sip, 12);
 		JTFport=new JTextField(_Sport,4);
 		jPFpwd=new JPasswordField(_pwd, 8);
+		JTFport.setEditable(false);
+		JTFip.setEditable(false);
+		JTFname.setEditable(false);
+		jPFpwd.setEditable(false);
 		ImageIcon Istart=new ImageIcon(getClass().getResource("_start.jpg"));
 		ImageIcon Istop=new ImageIcon(getClass().getResource("_stop.jpg"));
 		ImageIcon Imin=new ImageIcon(getClass().getResource("_min.jpg"));
@@ -371,6 +383,10 @@ public class callt {
                 menustop.setEnabled(true);
                 JBstart.setEnabled(false);	
     			JBstop.setEnabled(true);
+    			JTFport.setEditable(false);
+    			JTFip.setEditable(false);
+    			JTFname.setEditable(false);
+    			jPFpwd.setEditable(false);
             	}
             } 
         }; 
@@ -395,6 +411,10 @@ public class callt {
                 menustop.setEnabled(false);
                 JBstart.setEnabled(true);	
     			JBstop.setEnabled(false);
+    			JTFport.setEditable(true);
+        		JTFip.setEditable(true);
+        		JTFname.setEditable(true);
+        		jPFpwd.setEditable(true);
 			}
 		};
 		//°ïÖú¼àÌýÆ÷
